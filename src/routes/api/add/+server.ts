@@ -2,20 +2,36 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 let storedData = 0;
+let NextStation = true;
 
 export const POST = async ({ request }) => {
-	const { Station } = await request.json();
-	console.log("Plus station:",Station);
-	storedData = storedData + Station
-	console.log("Now station:",storedData)
-	return new Response(JSON.stringify({ message: 'Success' }), { status: 201 });
+	const { normalOP, Station, Next } = await request.json();
+
+	console.log('Plus station:', Station);
+	storedData = storedData + Station;
+	NextStation = Next;
+	console.log('Now station:', storedData);
+	console.log('Arriving', NextStation);
+	return new Response(
+		JSON.stringify({ message: 'Success', Station: storedData, Next: NextStation }),
+		{ status: 201 }
+	);
 };
 export const PUT = async ({ request }) => {
-	const { Station } = await request.json();
-	storedData = Station
-	console.log("station:",storedData)
-	return new Response(JSON.stringify({ message: 'Success' }), { status: 201 });
+	const { normalOP, Station, Next } = await request.json();
+	console.log('Plus station:', Station);
+	storedData = Station;
+	NextStation = Next;
+	console.log('Now station:', storedData);
+	console.log('Arriving', NextStation);
+	return new Response(
+		JSON.stringify({ message: 'Success', body: { Station: storedData, NextStation: NextStation } }),
+		{ status: 201 }
+	);
 };
-export const GET = async () => {
-	return new Response(JSON.stringify({ message: 'Success', body: storedData }), { status: 201 });
+export const GET = async ({}) => {
+	return new Response(
+		JSON.stringify({ message: 'Success', body: { Station: storedData, NextStation: NextStation } }),
+		{ status: 201 }
+	);
 };
