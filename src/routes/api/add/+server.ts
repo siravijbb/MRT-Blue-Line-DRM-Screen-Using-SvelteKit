@@ -1,85 +1,118 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-let storedData = 0;
+let currentStation = 0;
 let NextStation = false;
-let Arrive = true
-let lastState = 1
-let arriveYet
+let Arrived = true;
+let lastState = 1;
+let arriveYet;
+let TerminalStation = 38
 
 export const POST = async ({ request }) => {
-	const { normalOP } = await request.json();
-if(normalOP == true){
-	let excuted = false
-	let Next = false
-	let Arriving = false
-	
-	if(lastState == 1 && excuted == false){
-		storedData = storedData + 1
-		Next = true
-		Arriving = false
-		lastState = 2
-		excuted = true
-	}
-	else if(lastState == 2 && excuted == false){
-		Next = false
-		Arriving = true
-		lastState = 1
-		excuted = true
-   } 
-   
-	
-	console.log('Now station:', storedData);
-   	let NextStationLog = storedData + 1
-	console.log('Next station:', NextStationLog);
+	const { normalOP,Destination } = await request.json();
+	if (normalOP == true) {
+		let excuted = false;
+		let Next = false;
+		let Arriving = false;
+		TerminalStation = Destination
 
-	NextStation = Next; // T or F
-	Arrive = Arriving // T or F
-	console.log('State',lastState)
-	console.log('Arriving', Arriving);
-	return new Response(
-		JSON.stringify({ message: 'Success', Station: storedData, Next: NextStation, Arrive: Arrive }),
-		{ status: 201 }
-	);
-}
+		if (lastState == 2 && excuted == false && Destination > currentStation) {
+			currentStation = currentStation + 1;
+			Next = true;
+			Arriving = false;
+			lastState = 1;
+			excuted = true;
+		} else if (lastState == 2 && excuted == false && Destination < currentStation) {
+			currentStation = currentStation - 1;
+			Next = true;
+			Arriving = false;
+			lastState = 1;
+			excuted = true;
+		} 
+		else if (lastState == 1 && excuted == false && (Destination < currentStation || Destination > currentStation)) {
+			Next = false;
+			Arriving = true;
+			lastState = 2;
+			excuted = true;
+		} 
+		console.log('Now station:', currentStation);
+		let NextStationLog = currentStation + 1;
+		console.log('Next station:', NextStationLog);
+
+		NextStation = Next; // T or F
+		Arrived = Arriving; // T or F
+		console.log('State', lastState);
+		console.log('Arriving', Arriving);
+		return new Response(
+			JSON.stringify({
+				message: 'Success',
+				Station: currentStation,
+				Next: NextStation,
+				Arrive: Arrived
+			}),
+			{ status: 200 }
+		);
+	}
 };
+
+/// STATE
+/// 0:Terminated Service at Station
+/// 1:Arriving Station
+/// 2:Departing Station
+/// 3:Service Disrubted
+//TODO: ADD Service Disrub
 export const PUT = async ({ request }) => {
-	const { normalOP, Station,Status } = await request.json();
+	const { normalOP,Destination,State,Station } = await request.json();
+	if (normalOP == true) {
+		let excuted = false;
+		let Next = false;
+		let Arriving = false;
+		let lastState = State
+		currentStation = Station
+		if (lastState == 2 && excuted == false && Destination > currentStation) {
+			currentStation = currentStation + 1;
+			Next = true;
+			Arriving = false;
+			lastState = 1;
+			excuted = true;
+		} else if (lastState == 2 && excuted == false && Destination < currentStation) {
+			currentStation = currentStation - 1;
+			Next = true;
+			Arriving = false;
+			lastState = 1;
+			excuted = true;
+		} 
+		else if (lastState == 1 && excuted == false && (Destination < currentStation || Destination > currentStation)) {
+			Next = false;
+			Arriving = true;
+			lastState = 2;
+			excuted = true;
+		} 
+		console.log('Now station:', currentStation);
+		let NextStationLog = currentStation + 1;
+		console.log('Next station:', NextStationLog);
 
-
-	let Next = false
-	let Arriving = false
-
-
-	if(Status == 1){
-		 Next = true
-		 Arriving = false
+		NextStation = Next; // T or F
+		Arrived = Arriving; // T or F
+		console.log('State', lastState);
+		console.log('Arriving', Arriving);
+		return new Response(
+			JSON.stringify({
+				message: 'Success',
+				Station: currentStation,
+				Next: NextStation,
+				Arrive: Arrived
+			}),
+			{ status: 200 }
+		);
 	}
-	else if(Status == 2){
-		Next = false
-		Arriving = true
-   } else {
-		Next = false
-		Arriving = false
-   }
-
-	console.log('Plus station:', Station);
-	storedData = Station;
-
-	NextStation = Next;
-	console.log('Now station:', storedData);
-
-	Arrive = Arriving
-	console.log('Arriving', Arriving
-	);
-	return new Response(
-		JSON.stringify({ message: 'Success', Station: storedData, Next: NextStation, Arrive: Arrive }),
-		{ status: 201 }
-	);
 };
 export const GET = async ({}) => {
 	return new Response(
-		JSON.stringify({ message: 'Success', body: {Station: storedData, Next: NextStation, Arrive: Arrive } }),
-		{ status: 201 }
+		JSON.stringify({
+			message: 'Success',
+			body: { Station: currentStation, Next: NextStation, Arrive: Arrived,TerminalStation: TerminalStation  }
+		}),
+		{ status: 200 }
 	);
 };
